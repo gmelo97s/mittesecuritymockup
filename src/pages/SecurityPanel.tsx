@@ -10,10 +10,25 @@ interface Client {
   cpf: string;
   name: string;
   email: string;
+  whatsapp: string;
   birthDate: string;
   isInside: boolean;
   lastVisit: string;
 }
+
+interface HistoryEntry {
+  type: "entrada" | "saida";
+  date: string;
+  time: string;
+}
+
+// Mock histórico recente
+const mockHistory: HistoryEntry[] = [
+  { type: "entrada", date: "19/01/2024", time: "23:30" },
+  { type: "saida", date: "20/01/2024", time: "03:15" },
+  { type: "entrada", date: "12/01/2024", time: "22:45" },
+  { type: "saida", date: "13/01/2024", time: "02:30" },
+];
 
 function calculateAge(birthDate: string): number {
   const today = new Date();
@@ -140,7 +155,7 @@ export function SecurityPanel() {
               </div>
             </div>
 
-            {/* Info Grid */}
+            {/* Info Grid - All client data */}
             <div className="grid grid-cols-2 gap-3 mb-6">
               <div className="bg-muted/50 p-3 rounded-lg">
                 <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
@@ -153,6 +168,18 @@ export function SecurityPanel() {
                   Última Visita
                 </p>
                 <p className="text-sm text-foreground">{formatDate(client.lastVisit)}</p>
+              </div>
+              <div className="bg-muted/50 p-3 rounded-lg">
+                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
+                  WhatsApp
+                </p>
+                <p className="text-sm text-foreground">{client.whatsapp || "11937654207"}</p>
+              </div>
+              <div className="bg-muted/50 p-3 rounded-lg">
+                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
+                  Data de Nascimento
+                </p>
+                <p className="text-sm text-foreground">{formatDate(client.birthDate)}</p>
               </div>
             </div>
 
@@ -208,13 +235,51 @@ export function SecurityPanel() {
           className="mt-6"
         >
           <NeonCard className="bg-card/50">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 mb-4">
               <Clock className="w-5 h-5 text-secondary" />
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wider">
                   Histórico de Visitas
                 </p>
                 <p className="text-foreground font-orbitron">12 visitas registradas</p>
+              </div>
+            </div>
+
+            {/* Recent History */}
+            <div className="border-t border-border pt-4">
+              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3">
+                Últimas Entradas e Saídas
+              </p>
+              <div className="space-y-2">
+                {mockHistory.map((entry, index) => (
+                  <div
+                    key={index}
+                    className={`flex items-center justify-between p-2 rounded-lg ${
+                      entry.type === "entrada"
+                        ? "bg-success/10 border border-success/20"
+                        : "bg-muted/30 border border-border/50"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      {entry.type === "entrada" ? (
+                        <LogIn className="w-4 h-4 text-green-400" />
+                      ) : (
+                        <LogOut className="w-4 h-4 text-muted-foreground" />
+                      )}
+                      <span
+                        className={`text-sm font-medium ${
+                          entry.type === "entrada" ? "text-green-400" : "text-muted-foreground"
+                        }`}
+                      >
+                        {entry.type === "entrada" ? "Entrada" : "Saída"}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-foreground font-mono">{entry.time}</p>
+                      <p className="text-xs text-muted-foreground">{entry.date}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </NeonCard>

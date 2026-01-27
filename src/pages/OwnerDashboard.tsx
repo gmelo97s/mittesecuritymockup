@@ -1,14 +1,18 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { MitteLogo } from "@/components/MitteLogo";
 import { NeonCard } from "@/components/NeonCard";
 import { NeonButton } from "@/components/NeonButton";
+import { NeonInput } from "@/components/NeonInput";
 import { 
   Users, 
   UserCheck, 
   Clock, 
   Download, 
   TrendingUp,
-  Calendar
+  Calendar,
+  Search,
+  MessageCircle
 } from "lucide-react";
 import { 
   AreaChart, 
@@ -34,13 +38,16 @@ const hourlyData = [
   { hour: "03h", entries: 20 },
 ];
 
-const recentClients = [
-  { name: "João Silva", entry: "23:45", exit: "-", visits: 12 },
-  { name: "Maria Santos", entry: "23:30", exit: "-", visits: 8 },
-  { name: "Carlos Oliveira", entry: "23:15", exit: "-", visits: 24 },
-  { name: "Ana Costa", entry: "22:50", exit: "00:30", visits: 5 },
-  { name: "Pedro Lima", entry: "22:30", exit: "01:15", visits: 15 },
+// Mock data de clientes com todos os campos para busca
+const allClients = [
+  { name: "João Silva", cpf: "123.456.789-00", email: "joao@email.com", whatsapp: "11937654207", birthDate: "1994-05-15", entry: "23:45", exit: "-", visits: 12 },
+  { name: "Maria Santos", cpf: "987.654.321-00", email: "maria@email.com", whatsapp: "11937654207", birthDate: "1996-08-22", entry: "23:30", exit: "-", visits: 8 },
+  { name: "Carlos Oliveira", cpf: "456.789.123-00", email: "carlos@email.com", whatsapp: "11937654207", birthDate: "1990-12-10", entry: "23:15", exit: "-", visits: 24 },
+  { name: "Ana Costa", cpf: "321.654.987-00", email: "ana@email.com", whatsapp: "11937654207", birthDate: "1998-03-28", entry: "22:50", exit: "00:30", visits: 5 },
+  { name: "Pedro Lima", cpf: "789.123.456-00", email: "pedro@email.com", whatsapp: "11937654207", birthDate: "1995-07-03", entry: "22:30", exit: "01:15", visits: 15 },
 ];
+
+const recentClients = allClients;
 
 const kpis = [
   { label: "Visitas Hoje", value: "247", icon: Users, color: "primary" },
@@ -50,12 +57,34 @@ const kpis = [
 ];
 
 export function OwnerDashboard() {
+  const [searchTerm, setSearchTerm] = useState("");
+  
   const today = new Date().toLocaleDateString("pt-BR", {
     weekday: "long",
     year: "numeric",
     month: "long",
     day: "numeric",
   });
+
+  // Função para filtrar clientes baseado na busca
+  const filteredClients = allClients.filter((client) => {
+    if (!searchTerm) return true;
+    const term = searchTerm.toLowerCase();
+    return (
+      client.name.toLowerCase().includes(term) ||
+      client.cpf.includes(term) ||
+      client.email.toLowerCase().includes(term) ||
+      client.whatsapp.includes(term) ||
+      client.birthDate.includes(term)
+    );
+  });
+
+  // Função para abrir WhatsApp com mensagem pré-formatada
+  const openWhatsApp = (clientName: string, whatsapp: string) => {
+    const message = encodeURIComponent(`Olá, ${clientName}, aqui é o Lucas, tudo bem?`);
+    const phone = whatsapp.replace(/\D/g, "");
+    window.open(`https://wa.me/55${phone}?text=${message}`, "_blank");
+  };
 
   return (
     <motion.div
@@ -90,6 +119,25 @@ export function OwnerDashboard() {
             </NeonButton>
           </div>
         </div>
+
+        {/* Search Bar */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="mb-6"
+        >
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Buscar por nome, CPF, WhatsApp, e-mail ou data de nascimento..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 bg-card border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-secondary focus:shadow-[0_0_15px_hsl(180_100%_40%_/_0.3)] transition-all font-inter"
+            />
+          </div>
+        </motion.div>
 
         {/* KPI Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -209,10 +257,13 @@ export function OwnerDashboard() {
                     <th className="text-left py-3 px-2 text-xs text-muted-foreground uppercase tracking-wider font-orbitron">
                       Visitas
                     </th>
+                    <th className="text-left py-3 px-2 text-xs text-muted-foreground uppercase tracking-wider font-orbitron">
+                      Ação
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {recentClients.map((client, index) => (
+                  {filteredClients.map((client, index) => (
                     <motion.tr
                       key={index}
                       initial={{ opacity: 0, x: -10 }}
@@ -233,6 +284,15 @@ export function OwnerDashboard() {
                         <span className="bg-primary/20 text-primary px-2 py-1 rounded text-sm font-orbitron">
                           {client.visits}
                         </span>
+                      </td>
+                      <td className="py-3 px-2">
+                        <button
+                          onClick={() => openWhatsApp(client.name, client.whatsapp)}
+                          className="p-2 rounded-lg bg-success/20 border border-success/30 hover:bg-success/30 transition-colors group"
+                          title="Abrir WhatsApp"
+                        >
+                          <MessageCircle className="w-5 h-5 text-green-400 group-hover:scale-110 transition-transform" />
+                        </button>
                       </td>
                     </motion.tr>
                   ))}
